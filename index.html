@@ -1,265 +1,271 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Ultimate Task Manager</title>
+<title>Login + Task Manager</title>
 
-<!-- Excel Export Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
+*{
+    box-sizing: border-box;
+}
 
 body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg,#141e30,#243b55);
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg,#4e73df,#1cc88a);
     display:flex;
     justify-content:center;
     align-items:center;
     min-height:100vh;
-    color:white;
+    margin:0;
+    padding:20px;
 }
 
-.app {
-    width:520px;
-    background:rgba(255,255,255,0.1);
-    backdrop-filter:blur(15px);
+.container {
+    width:90%;
+    max-width:350px;
+    background:white;
     padding:25px;
-    border-radius:20px;
-    box-shadow:0 20px 40px rgba(0,0,0,0.5);
+    border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
 }
 
-h2 { text-align:center; margin-bottom:15px; }
+h2 { 
+    text-align:center; 
+    margin-bottom:15px;
+}
 
-input, select {
-    padding:8px;
-    border-radius:8px;
-    border:none;
-    margin-right:5px;
+input {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    font-size:16px;
 }
 
 button {
-    padding:8px 12px;
+    width:100%;
+    padding:10px;
+    background:#4e73df;
+    color:white;
     border:none;
-    border-radius:8px;
     cursor:pointer;
-    font-weight:bold;
+    font-size:16px;
+    border-radius:5px;
 }
 
-.add-btn { background:#1cc88a; color:white; }
-.remove-btn { background:#e74a3b; color:white; }
-.edit-btn { background:#f6c23e; color:black; }
+button:hover { 
+    background:#2e59d9; 
+}
 
-ul { list-style:none; margin-top:15px; }
+.hidden { 
+    display:none; 
+}
+
+ul { 
+    list-style:none; 
+    padding:0; 
+}
 
 li {
-    padding:12px;
-    margin-bottom:10px;
-    background:rgba(255,255,255,0.15);
-    border-radius:10px;
+    background:#f2f2f2;
+    margin:8px 0;
+    padding:10px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    cursor:grab;
-    transition:0.3s;
-}
-
-li:hover { transform:scale(1.02); }
-
-.completed { text-decoration:line-through; opacity:0.6; }
-
-.progress {
-    height:8px;
-    background:#555;
     border-radius:5px;
-    margin-top:15px;
+    flex-wrap:wrap;
 }
 
-.progress-bar {
-    height:8px;
-    background:#1cc88a;
-    border-radius:5px;
-    width:0%;
-    transition:0.4s;
+.logout-btn {
+    background:red;
+    margin-bottom:10px;
 }
 
-.top-row { display:flex; gap:5px; }
+a{
+    color:#4e73df;
+    text-decoration:none;
+    font-weight:bold;
+}
 
-.category { font-size:12px; opacity:0.8; }
+a:hover{
+    text-decoration:underline;
+}
 
-.button-group { display:flex; gap:5px; }
+/* Mobile Optimization */
+@media (max-width: 480px) {
+
+    body {
+        align-items:flex-start;
+        padding-top:40px;
+    }
+
+    .container {
+        padding:20px;
+        border-radius:15px;
+    }
+
+    h2 {
+        font-size:20px;
+    }
+
+    li {
+        flex-direction:column;
+        align-items:flex-start;
+        gap:5px;
+    }
+
+    button {
+        font-size:15px;
+    }
+}
 
 </style>
 </head>
 
 <body>
 
-<div class="app">
+<div class="container">
 
-<h2>⚡ Ultimate Task Manager</h2>
-
-<div class="top-row">
-<input type="text" id="taskInput" placeholder="Task">
-<select id="category">
-<option>Work</option>
-<option>Study</option>
-<option>Personal</option>
-</select>
-<button class="add-btn" onclick="addTask()">Add</button>
+<!-- LOGIN SECTION -->
+<div id="loginSection">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <p style="text-align:center;margin-top:10px;">
+        Don't have account? 
+        <a href="#" onclick="showRegister()">Register</a>
+    </p>
 </div>
 
-<ul id="taskList"></ul>
-
-<div class="progress">
-<div class="progress-bar" id="progressBar"></div>
+<!-- REGISTER SECTION -->
+<div id="registerSection" class="hidden">
+    <h2>Register</h2>
+    <input type="text" id="registerUsername" placeholder="Username">
+    <input type="password" id="registerPassword" placeholder="Password">
+    <button onclick="register()">Register</button>
+    <p style="text-align:center;margin-top:10px;">
+        Already have account? 
+        <a href="#" onclick="showLogin()">Login</a>
+    </p>
 </div>
 
-<br>
-
-<div class="button-group">
-<button onclick="clearCompleted()" class="remove-btn">Clear Completed</button>
-<button onclick="exportToExcel()" class="add-btn">Export to Excel</button>
+<!-- TASK SECTION -->
+<div id="taskSection" class="hidden">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h2>Task Manager</h2>
+    <input type="text" id="taskInput" placeholder="Add task">
+    <button onclick="addTask()">Add</button>
+    <ul id="taskList"></ul>
 </div>
 
 </div>
 
 <script>
 
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = localStorage.getItem("currentUser");
 
-function save() {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
+if(currentUser){
+    showTasks();
 }
 
-function addTask() {
-
-    let text = document.getElementById("taskInput").value.trim();
-    let category = document.getElementById("category").value;
-
-    if(text === "") return;
-
-    tasks.push({
-        text,
-        category,
-        completed:false
-    });
-
-    save();
-    display();
-    document.getElementById("taskInput").value="";
+function showRegister(){
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("registerSection").classList.remove("hidden");
 }
 
-function display() {
-
-    let list = document.getElementById("taskList");
-    list.innerHTML="";
-
-    let completedCount=0;
-
-    tasks.forEach((task,index)=>{
-
-        let li = document.createElement("li");
-        li.draggable=true;
-
-        li.ondragstart = ()=> dragStart(index);
-        li.ondragover = (e)=> e.preventDefault();
-        li.ondrop = ()=> drop(index);
-
-        let span = document.createElement("span");
-        span.innerHTML = `<strong>${task.text}</strong><br>
-        <span class="category">${task.category}</span>`;
-
-        if(task.completed) {
-            span.classList.add("completed");
-            completedCount++;
-        }
-
-        span.onclick = ()=>{
-            tasks[index].completed=!tasks[index].completed;
-            save();
-            display();
-        };
-
-        let editBtn = document.createElement("button");
-        editBtn.innerText="Edit";
-        editBtn.classList.add("edit-btn");
-
-        editBtn.onclick = ()=>{
-            let newText = prompt("Edit task:", task.text);
-            if(newText) {
-                tasks[index].text=newText;
-                save();
-                display();
-            }
-        };
-
-        let removeBtn = document.createElement("button");
-        removeBtn.innerText="X";
-        removeBtn.classList.add("remove-btn");
-
-        removeBtn.onclick=()=>{
-            tasks.splice(index,1);
-            save();
-            display();
-        };
-
-        let btnGroup = document.createElement("div");
-        btnGroup.classList.add("button-group");
-        btnGroup.appendChild(editBtn);
-        btnGroup.appendChild(removeBtn);
-
-        li.appendChild(span);
-        li.appendChild(btnGroup);
-
-        list.appendChild(li);
-    });
-
-    updateProgress(completedCount);
+function showLogin(){
+    document.getElementById("registerSection").classList.add("hidden");
+    document.getElementById("loginSection").classList.remove("hidden");
 }
 
-function dragStart(index){
-    window.dragged=index;
-}
+function register(){
+    let username = document.getElementById("registerUsername").value.trim();
+    let password = document.getElementById("registerPassword").value.trim();
 
-function drop(index){
-    let temp=tasks[window.dragged];
-    tasks.splice(window.dragged,1);
-    tasks.splice(index,0,temp);
-    save();
-    display();
-}
-
-function updateProgress(completed){
-    let percent= tasks.length===0?0:(completed/tasks.length)*100;
-    document.getElementById("progressBar").style.width=percent+"%";
-}
-
-function clearCompleted(){
-    tasks = tasks.filter(t=>!t.completed);
-    save();
-    display();
-}
-
-function exportToExcel(){
-
-    if(tasks.length === 0){
-        alert("No tasks to export!");
+    if(username === "" || password === ""){
+        alert("Please fill all fields");
         return;
     }
 
-    let formattedData = tasks.map(task => ({
-        Task: task.text,
-        Category: task.category,
-        Completed: task.completed ? "Yes" : "No"
-    }));
+    let existingUser = users.find(u => u.username === username);
 
-    let worksheet = XLSX.utils.json_to_sheet(formattedData);
-    let workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+    if(existingUser){
+        alert("Username already exists");
+        return;
+    }
 
-    XLSX.writeFile(workbook, "TaskManager.xlsx");
+    users.push({username, password});
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Registered Successfully!");
+    showLogin();
 }
 
-display();
+function login(){
+    let username = document.getElementById("loginUsername").value.trim();
+    let password = document.getElementById("loginPassword").value.trim();
+
+    if(username === "" || password === ""){
+        alert("Enter username & password");
+        return;
+    }
+
+    let user = users.find(u => u.username === username && u.password === password);
+
+    if(user){
+        localStorage.setItem("currentUser", username);
+        showTasks();
+    } else {
+        alert("Invalid Credentials");
+    }
+}
+
+function logout(){
+    localStorage.removeItem("currentUser");
+    location.reload();
+}
+
+function showTasks(){
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("registerSection").classList.add("hidden");
+    document.getElementById("taskSection").classList.remove("hidden");
+    displayTasks();
+}
+
+function addTask(){
+    let input = document.getElementById("taskInput");
+    let text = input.value.trim();
+    if(text === "") return;
+
+    let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks")) || [];
+    tasks.push(text);
+    localStorage.setItem(currentUser+"_tasks", JSON.stringify(tasks));
+    input.value="";
+    displayTasks();
+}
+
+function displayTasks(){
+    let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks")) || [];
+    let list = document.getElementById("taskList");
+    list.innerHTML="";
+
+    tasks.forEach((task,index)=>{
+        let li = document.createElement("li");
+        li.innerHTML = `${task} 
+            <button onclick="deleteTask(${index})">X</button>`;
+        list.appendChild(li);
+    });
+}
+
+function deleteTask(index){
+    let tasks = JSON.parse(localStorage.getItem(currentUser+"_tasks")) || [];
+    tasks.splice(index,1);
+    localStorage.setItem(currentUser+"_tasks", JSON.stringify(tasks));
+    displayTasks();
+}
 
 </script>
 
