@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ultimate Task Manager</title>
+
+<!-- Excel Export Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#141e30,#243b55);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    color:white;
+}
+
+.app {
+    width:520px;
+    background:rgba(255,255,255,0.1);
+    backdrop-filter:blur(15px);
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 20px 40px rgba(0,0,0,0.5);
+}
+
+h2 { text-align:center; margin-bottom:15px; }
+
+input, select {
+    padding:8px;
+    border-radius:8px;
+    border:none;
+    margin-right:5px;
+}
+
+button {
+    padding:8px 12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.add-btn { background:#1cc88a; color:white; }
+.remove-btn { background:#e74a3b; color:white; }
+.edit-btn { background:#f6c23e; color:black; }
+
+ul { list-style:none; margin-top:15px; }
+
+li {
+    padding:12px;
+    margin-bottom:10px;
+    background:rgba(255,255,255,0.15);
+    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:grab;
+    transition:0.3s;
+}
+
+li:hover { transform:scale(1.02); }
+
+.completed { text-decoration:line-through; opacity:0.6; }
+
+.progress {
+    height:8px;
+    background:#555;
+    border-radius:5px;
+    margin-top:15px;
+}
+
+.progress-bar {
+    height:8px;
+    background:#1cc88a;
+    border-radius:5px;
+    width:0%;
+    transition:0.4s;
+}
+
+.top-row { display:flex; gap:5px; }
+
+.category { font-size:12px; opacity:0.8; }
+
+.button-group { display:flex; gap:5px; }
+
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h2>⚡ Ultimate Task Manager</h2>
+
+<div class="top-row">
+<input type="text" id="taskInput" placeholder="Task">
+<select id="category">
+<option>Work</option>
+<option>Study</option>
+<option>Personal</option>
+</select>
+<button class="add-btn" onclick="addTask()">Add</button>
+</div>
+
+<ul id="taskList"></ul>
+
+<div class="progress">
+<div class="progress-bar" id="progressBar"></div>
+</div>
+
+<br>
+
+<div class="button-group">
+<button onclick="clearCompleted()" class="remove-btn">Clear Completed</button>
+<button onclick="exportToExcel()" class="add-btn">Export to Excel</button>
+</div>
+
+</div>
+
+<script>
+
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+function save() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function addTask() {
+
+    let text = document.getElementById("taskInput").value.trim();
+    let category = document.getElementById("category").value;
+
+    if(text === "") return;
+
+    tasks.push({
+        text,
+        category,
+        completed:false
+    });
+
+    save();
+    display();
+    document.getElementById("taskInput").value="";
+}
+
+function display() {
+
+    let list = document.getElementById("taskList");
+    list.innerHTML="";
+
+    let completedCount=0;
+
+    tasks.forEach((task,index)=>{
+
+        let li = document.createElement("li");
+        li.draggable=true;
+
+        li.ondragstart = ()=> dragStart(index);
+        li.ondragover = (e)=> e.preventDefault();
+        li.ondrop = ()=> drop(index);
+
+        let span = document.createElement("span");
+        span.innerHTML = `<strong>${task.text}</strong><br>
+        <span class="category">${task.category}</span>`;
+
+        if(task.completed) {
+            span.classList.add("completed");
+            completedCount++;
+        }
+
+        span.onclick = ()=>{
+            tasks[index].completed=!tasks[index].completed;
+            save();
+            display();
+        };
+
+        let editBtn = document.createElement("button");
+        editBtn.innerText="Edit";
+        editBtn.classList.add("edit-btn");
+
+        editBtn.onclick = ()=>{
+            let newText = prompt("Edit task:", task.text);
+            if(newText) {
+                tasks[index].text=newText;
+                save();
+                display();
+            }
+        };
+
+        let removeBtn = document.createElement("button");
+        removeBtn.innerText="X";
+        removeBtn.classList.add("remove-btn");
+
+        removeBtn.onclick=()=>{
+            tasks.splice(index,1);
+            save();
+            display();
+        };
+
+        let btnGroup = document.createElement("div");
+        btnGroup.classList.add("button-group");
+        btnGroup.appendChild(editBtn);
+        btnGroup.appendChild(removeBtn);
+
+        li.appendChild(span);
+        li.appendChild(btnGroup);
+
+        list.appendChild(li);
+    });
+
+    updateProgress(completedCount);
+}
+
+function dragStart(index){
+    window.dragged=index;
+}
+
+function drop(index){
+    let temp=tasks[window.dragged];
+    tasks.splice(window.dragged,1);
+    tasks.splice(index,0,temp);
+    save();
+    display();
+}
+
+function updateProgress(completed){
+    let percent= tasks.length===0?0:(completed/tasks.length)*100;
+    document.getElementById("progressBar").style.width=percent+"%";
+}
+
+function clearCompleted(){
+    tasks = tasks.filter(t=>!t.completed);
+    save();
+    display();
+}
+
+function exportToExcel(){
+
+    if(tasks.length === 0){
+        alert("No tasks to export!");
+        return;
+    }
+
+    let formattedData = tasks.map(task => ({
+        Task: task.text,
+        Category: task.category,
+        Completed: task.completed ? "Yes" : "No"
+    }));
+
+    let worksheet = XLSX.utils.json_to_sheet(formattedData);
+    let workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tasks");
+
+    XLSX.writeFile(workbook, "TaskManager.xlsx");
+}
+
+display();
+
+</script>
+
+</body>
+</html>
